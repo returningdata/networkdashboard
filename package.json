@@ -1,0 +1,30 @@
+{
+  "name": "sector-panel",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "postinstall": "prisma generate"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.19.1",
+    "next": "^14.2.35",
+    "next-auth": "^4.24.7",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "prisma": "^5.19.1",
+    "typescript": "^5.5.4"
+  }
+}
+
+"scripts": {
+  "dev": "next dev",
+  "postinstall": "prisma generate",
+  "build": "prisma generate && next build",
+  "start": "next start"
+}

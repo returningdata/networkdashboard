@@ -1,0 +1,159 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  discordId String   @unique
+  username  String?
+  avatar    String?
+  createdAt DateTime @default(now())
+
+  memberships NetworkMember[]
+  grants      RoleGrant[]
+}
+
+model Network {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  members NetworkMember[]
+  guilds   Guild[]
+  roles    NetworkRole[]
+}
+
+model NetworkMember {
+  id        String   @id @default(cuid())
+  networkId String
+  userId    String
+  role      NetworkMemberRole @default(ADMIN)
+  createdAt DateTime @default(now())
+
+  network Network @relation(fields: [networkId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([networkId, userId])
+}
+
+enum NetworkMemberRole {
+  OWNER
+  ADMIN
+  MOD
+  VIEWER
+}
+
+model Guild {
+  id        String   @id @default(cuid())
+  guildId   String   @unique
+  name      String?
+  icon      String?
+  networkId String
+  linkedAt  DateTime @default(now())
+
+  network   Network @relation(fields: [networkId], references: [id], onDelete: Cascade)
+  mappings  RoleMapping[]
+  required  RequiredGuild[]
+}
+
+model NetworkRole {
+  id        String   @id @default(cuid())
+  networkId String
+  name      String
+  createdAt DateTime @default(now())
+
+  network   Network @relation(fields: [networkId], references: [id], onDelete: Cascade)
+  mappings  RoleMapping[]
+  required  RequiredGuild[]
+  grants    RoleGrant[]
+
+  @@unique([networkId, name])
+}
+
+model RoleMapping {
+  id            String   @id @default(cuid())
+  networkRoleId String
+  guildId       String
+  discordRoleId String
+  createdAt     DateTime @default(now())
+
+  networkRole NetworkRole @relation(fields: [networkRoleId], references: [id], onDelete: Cascade)
+  guild       Guild       @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@unique([networkRoleId, guildId])
+}
+
+model RequiredGuild {
+  id            String   @id @default(cuid())
+  networkRoleId String
+  guildId       String
+  createdAt     DateTime @default(now())
+
+  networkRole NetworkRole @relation(fields: [networkRoleId], references: [id], onDelete: Cascade)
+  guild       Guild       @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@unique([networkRoleId, guildId])
+}
+
+model RoleGrant {
+  id            String   @id @default(cuid())
+  userId        String
+  networkRoleId String
+  grantedBy     String?
+  createdAt     DateTime @default(now())
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  networkRole NetworkRole @relation(fields: [networkRoleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, networkRoleId])
+}
+
+model SyncAction {
+  id             String   @id @default(cuid())
+  type           SyncActionType
+  guildDiscordId String
+  userDiscordId  String
+  roleDiscordId  String
+  requestedBy    String?
+  status         SyncActionStatus @default(PENDING)
+  error          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+enum SyncActionType {
+  ADD_ROLE
+  REMOVE_ROLE
+}
+
+enum SyncActionStatus {
+  PENDING
+  PROCESSING
+  DONE
+  FAILED
+}
+
+model AuditLog {
+  id             String   @id @default(cuid())
+  networkId      String
+  actorDiscordId String?
+  action         String
+  details        String?
+  createdAt      DateTime @default(now())
+}
+
+model AuthCode {
+  id             String   @id @default(cuid())
+  codeHash       String   @unique
+  guildDiscordId String
+  guildName      String?
+  issuedToUserId String
+  expiresAt      DateTime
+  usedAt         DateTime?
+  createdAt      DateTime @default(now())
+}
