@@ -1,5 +1,5 @@
 {
-  "name": "sector-panel",
+  "name": "networkdashboard",
   "private": true,
   "scripts": {
     "dev": "next dev",
